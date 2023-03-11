@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Data;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
@@ -10,8 +11,13 @@ internal class Program
     {
         //С ipendpoint удаётся забиндить конкретный адрес под tcp клиент
         IPEndPoint ipPoint = IPEndPoint.Parse("127.0.0.1:7777");
-        TcpClient client = new TcpClient(ipPoint);
+        TcpClient client = new TcpClient();
+        TcpClient client1 = new TcpClient();
         await client.ConnectAsync("127.0.0.1", 8888);
+        Console.WriteLine("abc");
+        //await client1.ConnectAsync("127.0.0.1", 8888);
+        Console.WriteLine("abc");
+        
 
         var jsonData = new List<Dictionary<string, Dictionary<string, string>>>()
         {
@@ -49,29 +55,64 @@ internal class Program
                 }
             }
         };
-        
-        //Часть отправки данных по TCP
-        //Сериализуем Json, кодируем в байты, открываем сетевой поток, посылаем данные в виде байтов
-        var json = JsonSerializer.Serialize(jsonData);
-        byte[] requestData = Encoding.UTF8.GetBytes(json);
-        NetworkStream stream = client.GetStream();
-        await stream.WriteAsync(requestData);
 
-        //Часть получения данных по TCP
-        int buffersize = 512;
-        byte[] buffer = new byte[buffersize];
-        StringBuilder response = new StringBuilder();
-        int bytes;
-        do
+        var jsondict = new Dictionary<string, Dictionary<string, string>>
         {
-            bytes = await stream.ReadAsync(buffer);
-            string strresponse = Encoding.UTF8.GetString(buffer, 0, buffersize);
-            response.Append(strresponse);
-        } while (bytes == buffersize);
+            ["abc"] = new Dictionary<string, string>
+            {
+                ["abd"] = "abd"
+            },
+            ["data"] = new Dictionary<string, string>
+            {
+                ["abc"] = "cdb"
+            }
+        };
 
-        Console.WriteLine(response);
+        NetworkStream stream = client.GetStream();
+
+        while (true)
+        {
+
+            Console.WriteLine("Введите команду:\n1. Отправить запрос\n2. Завершить работу");
+            int command = int.Parse(Console.ReadLine());
+            if (command == 1)
+            {
+                //Часть отправки данных по TCP
+                //Сериализуем Json, кодируем в байты, открываем сетевой поток, посылаем данные в виде байтов
+                var json = JsonSerializer.Serialize(jsonData);
+                byte[] requestData = Encoding.UTF8.GetBytes(json);
+                //var jsondictser = JsonSerializer.Serialize(jsondict);
+                //byte[] requestData = Encoding.UTF8.GetBytes(jsondictser);
+                //NetworkStream stream = client.GetStream();
+                //NetworkStream stream1 = client1.GetStream();
+
+
+                await stream.WriteAsync(requestData);
+                //await stream1.WriteAsync(requestData);
+                //Часть получения данных по TCP
+                int buffersize = 512;
+                byte[] buffer = new byte[buffersize];
+                StringBuilder response = new StringBuilder();
+                int bytes;
+                do
+                {
+                    bytes = await stream.ReadAsync(buffer);
+                    string strresponse = Encoding.UTF8.GetString(buffer, 0, buffersize);
+                    response.Append(strresponse);
+                } while (bytes == buffersize);
+
+                Console.WriteLine(response);
+            } else if (command == 2)
+            {
+                await stream.WriteAsync(Encoding.UTF8.GetBytes("END"));
+                break;
+            }
+            
+        }
+
         stream.Close();
         client.Close();
+        client1.Close();
 
         Console.WriteLine("Нажмите enter...");
         Console.ReadLine();
