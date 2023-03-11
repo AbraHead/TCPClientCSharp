@@ -12,10 +12,7 @@ internal class Program
         //С ipendpoint удаётся забиндить конкретный адрес под tcp клиент
         IPEndPoint ipPoint = IPEndPoint.Parse("127.0.0.1:7777");
         TcpClient client = new TcpClient();
-        TcpClient client1 = new TcpClient();
         await client.ConnectAsync("127.0.0.1", 8888);
-        Console.WriteLine("abc");
-        //await client1.ConnectAsync("127.0.0.1", 8888);
         Console.WriteLine("abc");
         
 
@@ -81,14 +78,10 @@ internal class Program
                 //Сериализуем Json, кодируем в байты, открываем сетевой поток, посылаем данные в виде байтов
                 var json = JsonSerializer.Serialize(jsonData);
                 byte[] requestData = Encoding.UTF8.GetBytes(json);
-                //var jsondictser = JsonSerializer.Serialize(jsondict);
-                //byte[] requestData = Encoding.UTF8.GetBytes(jsondictser);
-                //NetworkStream stream = client.GetStream();
-                //NetworkStream stream1 = client1.GetStream();
+
 
 
                 await stream.WriteAsync(requestData);
-                //await stream1.WriteAsync(requestData);
                 //Часть получения данных по TCP
                 int buffersize = 512;
                 byte[] buffer = new byte[buffersize];
@@ -112,7 +105,6 @@ internal class Program
 
         stream.Close();
         client.Close();
-        client1.Close();
 
         Console.WriteLine("Нажмите enter...");
         Console.ReadLine();
